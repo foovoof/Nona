@@ -1,0 +1,30 @@
+workflow:
+  name: delivery
+  version: "1.0"
+  description: "Delivery lifecycle with proof and OTP"
+  initial_state: draft
+  states:
+    - name: draft
+      transitions: [requested]
+    - name: requested
+      transitions: [searching, cancelled]
+    - name: searching
+      transitions: [offered, cancelled, failed]
+    - name: offered
+      transitions: [accepted, expired, cancelled]
+    - name: accepted
+      transitions: [driver_arrived, cancelled]
+    - name: driver_arrived
+      transitions: [in_progress, cancelled]
+    - name: in_progress
+      transitions: [proof_submitted, cancelled, failed]
+    - name: proof_submitted
+      transitions: [confirmed, failed]
+    - name: confirmed
+      terminal: true
+    - name: cancelled
+      terminal: true
+    - name: failed
+      terminal: true
+    - name: expired
+      terminal: true

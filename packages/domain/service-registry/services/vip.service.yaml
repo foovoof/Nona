@@ -1,0 +1,16 @@
+service:
+  service_id: vip
+  name: "VIP Premium Ride"
+  enabled: true
+  job_type: vip
+  required_capabilities:
+    - type: city_access
+      scope: "{city_id}"
+    - type: vehicle_type
+      scope: "luxury|premium|executive"
+  required_driver_attributes:
+    - min_trust_score: 70
+    - min_completed_jobs: 100
+  supports_scheduling: true
+  supports_payment: true
+  allowed_cities: ["city_001", "city_002"]

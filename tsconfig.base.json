@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "target": "ES2022",
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "paths": {
+      "@tos/shared/*": ["./packages/shared/*"],
+      "@tos/domain/*": ["./packages/domain/*"],
+      "@tos/application/*": ["./packages/application/*"],
+      "@tos/infrastructure/*": ["./packages/infrastructure/*"],
+      "@tos/config": ["./packages/config"]
+    }
+  }
+}

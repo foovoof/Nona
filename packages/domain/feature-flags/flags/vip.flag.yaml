@@ -1,0 +1,8 @@
+flag:
+  name: vip_enabled
+  description: "Enable VIP premium service"
+  default: false
+  rollout_rules:
+    - type: city
+      cities: ["city_001"]
+      enabled: true

@@ -1,0 +1,26 @@
+workflow:
+  name: scheduled
+  version: "1.0"
+  description: "Scheduled job lifecycle with retry"
+  initial_state: scheduled
+  states:
+    - name: scheduled
+      transitions: [triggered, cancelled]
+    - name: triggered
+      transitions: [dispatched, retrying, failed]
+    - name: dispatched
+      transitions: [accepted, expired, retrying]
+    - name: retrying
+      transitions: [triggered, dead]
+    - name: accepted
+      transitions: [completed, failed]
+    - name: completed
+      terminal: true
+    - name: cancelled
+      terminal: true
+    - name: expired
+      terminal: true
+    - name: failed
+      terminal: true
+    - name: dead
+      terminal: true

@@ -1,0 +1,16 @@
+service:
+  service_id: ride
+  name: "Standard Ride"
+  enabled: true
+  job_type: ride
+  required_capabilities:
+    - type: city_access
+      scope: "{city_id}"
+    - type: vehicle_type
+      scope: "sedan|suv|hatchback"
+  supports_scheduling: true
+  supports_payment: true
+  supports_proof: false
+  supports_otp: false
+  max_passengers: 4
+  allowed_cities: ["*"]

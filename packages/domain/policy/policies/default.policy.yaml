@@ -1,0 +1,19 @@
+policies:
+  - name: driver_eligibility
+    version: "1.0"
+    rules:
+      - condition: "driver.kyc_status == 'approved'"
+        effect: allow
+      - condition: "driver.suspended == true"
+        effect: deny
+        reason: "Driver is suspended"
+
+  - name: cancellation_fee
+    version: "1.0"
+    rules:
+      - condition: "job.status == 'accepted' AND elapsed_minutes > 5"
+        effect: modify
+        modification: { apply_cancellation_fee: true }
+      - condition: "job.status == 'searching'"
+        effect: allow
+        modification: { apply_cancellation_fee: false }

@@ -1,0 +1,7 @@
+# Delivery-specific policies
+policies:
+  - name: proof_requirements
+    rules:
+      - condition: "job.type == 'delivery' AND city.requires_otp"
+        effect: modify
+        modification: { require_otp: true }

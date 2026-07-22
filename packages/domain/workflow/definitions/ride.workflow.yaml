@@ -1,0 +1,28 @@
+workflow:
+  name: ride
+  version: "1.0"
+  description: "Ride request lifecycle state machine"
+  initial_state: draft
+  states:
+    - name: draft
+      transitions: [requested]
+    - name: requested
+      transitions: [searching, cancelled]
+    - name: searching
+      transitions: [offered, cancelled, failed]
+    - name: offered
+      transitions: [accepted, expired, cancelled]
+    - name: accepted
+      transitions: [driver_arrived, cancelled]
+    - name: driver_arrived
+      transitions: [in_progress, cancelled]
+    - name: in_progress
+      transitions: [completed, cancelled, failed]
+    - name: completed
+      terminal: true
+    - name: cancelled
+      terminal: true
+    - name: failed
+      terminal: true
+    - name: expired
+      terminal: true

@@ -1,0 +1,15 @@
+service:
+  service_id: courier
+  name: "Multi-Stop Courier"
+  enabled: true
+  job_type: courier
+  required_capabilities:
+    - type: city_access
+      scope: "{city_id}"
+  supports_scheduling: false
+  supports_payment: true
+  supports_proof: true
+  supports_otp: false
+  max_stops: 10
+  max_weight_kg: 30
+  allowed_cities: ["*"]

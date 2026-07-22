@@ -1,0 +1,32 @@
+workflow:
+  name: courier
+  version: "1.0"
+  description: "Courier multi-stop lifecycle"
+  initial_state: draft
+  states:
+    - name: draft
+      transitions: [requested]
+    - name: requested
+      transitions: [searching, cancelled]
+    - name: searching
+      transitions: [offered, failed]
+    - name: offered
+      transitions: [accepted, expired]
+    - name: accepted
+      transitions: [en_route_pickup, cancelled]
+    - name: en_route_pickup
+      transitions: [at_pickup, cancelled]
+    - name: at_pickup
+      transitions: [picked_up, cancelled]
+    - name: picked_up
+      transitions: [en_route_dropoff, cancelled]
+    - name: en_route_dropoff
+      transitions: [at_dropoff, failed]
+    - name: at_dropoff
+      transitions: [delivered, failed]
+    - name: delivered
+      terminal: true
+    - name: cancelled
+      terminal: true
+    - name: failed
+      terminal: true

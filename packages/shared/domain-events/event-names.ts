@@ -1,0 +1,32 @@
+/** Canonical event names — use these constants, never raw strings. */
+export const EVENT_NAMES = {
+  RIDE_REQUESTED: 'RideRequested',
+  DELIVERY_REQUESTED: 'DeliveryRequested',
+  JOB_CREATED: 'JobCreated',
+  DRIVERS_RANKED: 'DriversRanked',
+  OFFER_SENT: 'OfferSent',
+  OFFER_EXPIRED: 'OfferExpired',
+  OFFER_ACCEPTED: 'OfferAccepted',
+  OFFER_REJECTED: 'OfferRejected',
+  JOB_STARTED: 'JobStarted',
+  JOB_COMPLETED: 'JobCompleted',
+  JOB_CANCELLED: 'JobCancelled',
+  PAYMENT_AUTHORIZED: 'PaymentAuthorized',
+  PAYMENT_CAPTURED: 'PaymentCaptured',
+  PAYMENT_SETTLED: 'PaymentSettled',
+  EMERGENCY_RAISED: 'EmergencyRaised',
+  DRIVER_FLAGGED: 'DriverFlagged',
+  DRIVER_SUSPENDED: 'DriverSuspended',
+  KYC_DOCUMENTS_SUBMITTED: 'KYCDocumentsSubmitted',
+  KYC_DOCUMENTS_APPROVED: 'KYCDocumentsApproved',
+  DELIVERY_PROOF_SUBMITTED: 'DeliveryProofSubmitted',
+  REPUTATION_UPDATED: 'ReputationUpdated',
+  POLICY_EVALUATED: 'PolicyEvaluated',
+  NOTIFICATION_SENT: 'NotificationSent',
+  SCHEDULED_TASK_CREATED: 'ScheduledTaskCreated',
+  SCHEDULED_TASK_EXECUTED: 'ScheduledTaskExecuted',
+  WEBHOOK_RECEIVED: 'WebhookReceived',
+  WEBHOOK_PROCESSED: 'WebhookProcessed',
+} as const;
+
+export type EventName = typeof EVENT_NAMES[keyof typeof EVENT_NAMES];

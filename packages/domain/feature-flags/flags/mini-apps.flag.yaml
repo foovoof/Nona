@@ -1,0 +1,8 @@
+flag:
+  name: mini_apps_enabled
+  description: "Enable Telegram Mini Apps"
+  default: false
+  rollout_rules:
+    - type: percentage
+      percentage: 10
+      seed: mini_apps_rollout

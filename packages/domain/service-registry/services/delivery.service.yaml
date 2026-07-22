@@ -1,0 +1,14 @@
+service:
+  service_id: delivery
+  name: "Package Delivery"
+  enabled: true
+  job_type: delivery
+  required_capabilities:
+    - type: city_access
+      scope: "{city_id}"
+  supports_scheduling: true
+  supports_payment: true
+  supports_proof: true
+  supports_otp: true
+  max_weight_kg: 20
+  allowed_cities: ["*"]

@@ -1,0 +1,15 @@
+service:
+  service_id: airport_pickup
+  name: "Airport Pickup"
+  enabled: true
+  job_type: airport_pickup
+  required_capabilities:
+    - type: city_access
+      scope: "{city_id}"
+    - type: service_type
+      scope: "airport"
+  supports_scheduling: true
+  supports_payment: true
+  features: [flight_tracking, meet_and_greet, waiting_time]
+  free_waiting_minutes: 30
+  allowed_cities: ["*"]

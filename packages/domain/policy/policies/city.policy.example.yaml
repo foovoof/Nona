@@ -1,0 +1,8 @@
+# City-specific policy overrides
+policies:
+  - name: city_surge_cap
+    city_id: city_example
+    rules:
+      - condition: "surge.multiplier > 2.5"
+        effect: modify
+        modification: { surge_multiplier: 2.5 }
