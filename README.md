@@ -1,21 +1,81 @@
-# Enhanced Vite React TypeScript Template
+# نونة (Nona) — منصة نقل ذكي عبر تيليجرام
 
-Vite + React + TypeScript + Tailwind CSS template with Shadcn/ui pre-configured.
+نظام نقل ذكي بالكامل عبر تيليجرام، مصمم للمملكة العربية السعودية.
 
-## Features
+## الميزات الرئيسية
 
-- **Linting**: TypeScript (`tsc --noEmit`), ESLint, and Stylelint
-- **Shadcn/ui**: Pre-configured with all Shadcn components
-- **Modern Stack**: Vite + React + TypeScript + Tailwind CSS
+- 🤖 **بوتان متكاملان**: بوت للراكب وآخر للسائق يعملان عبر خلفية واحدة
+- 📍 **توزيع جغرافي ذكي**: أقرب السائقين المتاحين تلقائياً مع موجة احتياطية
+- 🚨 **زر طوارئ حقيقي**: تنبيه فوري للدعم مع موقع الراكب وبيانات السائق
+- ⭐ **تقييم متبادل + AI**: تقييم بعد كل رحلة يؤثر على ترتيب السائقين
+- 🔒 **خصوصية ومراسلة Relay**: تواصل مباشر عبر البوت بدون كشف الأرقام
+- 🗺 **لوحة تحكم للإدارة**: إدارة السائقين والرحلات والطوارئ والدعم
 
-## Available Scripts
+## البنية التقنية
+
+- **Frontend + SSR**: TanStack Start + React 19 + Tailwind CSS v4
+- **قاعدة البيانات**: Supabase (PostgreSQL + Row-Level Security)
+- **الخرائط**: Mapbox (مع Haversine كاحتياط)
+- **الطقس**: Open-Meteo API (مجاني)
+- **الذكاء الاصطناعي**: Lovable AI Gateway (OpenAI-compatible)
+- **التقويم**: حسابات هجرية/ميلادية للمناسبات السعودية
+
+## إعداد البيئة
+
+انسخ `.env.example` إلى `.env` واملأ القيم:
 
 ```bash
-# Run all linting (types + JS + CSS)
-npm run lint
-
-# Individual linting
-npm run lint:types # TypeScript (tsc --noEmit)
-npm run lint:js    # ESLint
-npm run lint:css   # Stylelint
+cp .env.example .env
 ```
+
+### المتغيرات المطلوبة
+
+| المتغير | الوصف |
+|---------|-------|
+| `VITE_SUPABASE_URL` | رابط مشروع Supabase |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | المفتاح العام (anon key) |
+| `SUPABASE_SERVICE_ROLE_KEY` | مفتاح الخادم (سري - لا تشاركه) |
+| `TELEGRAM_RIDER_BOT_TOKEN` | توكن بوت الراكب من @BotFather |
+| `TELEGRAM_DRIVER_BOT_TOKEN` | توكن بوت السائق من @BotFather |
+| `TELEGRAM_SUPPORT_CHAT_ID` | معرف مجموعة الدعم في تيليجرام |
+| `MAPBOX_ACCESS_TOKEN` | توكن Mapbox للخرائط والمسافات |
+| `LOVABLE_API_KEY` | مفتاح API للتقييم الذكي |
+
+## قاعدة البيانات
+
+تطبيق المهاجرات عبر Supabase CLI:
+
+```bash
+supabase db push
+# أو
+supabase migration up
+```
+
+ملفات المهاجرات موجودة في: `supabase/migrations/`
+
+## تشغيل البوتات
+
+بعد إعداد المتغيرات وتشغيل التطبيق، سجّل webhooks عبر لوحة الإدارة:
+
+1. افتح `/admin/settings`
+2. أدخل رابط النشر (Base URL)
+3. اضغط "تسجيل Webhooks الآن"
+
+## مراحل التطوير
+
+### المرحلة الصفر (مكتملة ✅)
+- [x] HMAC على نقاط webhook
+- [x] التحقق من IP تيليجرام
+- [x] تقييد المعدل (Rate limiting)
+- [x] CSRF على لوحة الإدارة
+- [x] حماية من إعادة الإرسال عبر `update_id`
+- [x] آلة حالة صارمة للرحلات
+- [x] تقييم AI بدون تكرار
+- [x] توقيت السعودية (Asia/Riyadh)
+
+### المراحل القادمة
+- [ ] التحقق من الهوية (KYC)
+- [ ] نظام الدفع
+- [ ] برنامج الولاء
+- [ ] تطبيق موبايل
+- [ ] التنبؤ بالطلب بالذكاء الاصطناعي
