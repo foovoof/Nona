@@ -1,10 +1,13 @@
-// Cron: aggregate ride history into peak_zones (called every hour).
+// Cron: aggregate ride history into peak_zones (Riyadh-local buckets, UTC storage).
 import { createFileRoute } from "@tanstack/react-router";
+import { guardCronRequest } from "@/lib/security/guards.server";
 
 export const Route = createFileRoute("/api/public/cron/aggregate-peaks")({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
+        const guard = await guardCronRequest(request);
+        if (!guard.ok) return guard.response;
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { error } = await supabaseAdmin.rpc("aggregate_peak_zones");
         if (error) {

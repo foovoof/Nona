@@ -68,6 +68,11 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(import.meta.dirname, './src'),
+      '@tos/shared': path.resolve(import.meta.dirname, './packages/shared'),
+      '@tos/domain': path.resolve(import.meta.dirname, './packages/domain'),
+      '@tos/application': path.resolve(import.meta.dirname, './packages/application'),
+      '@tos/infrastructure': path.resolve(import.meta.dirname, './packages/infrastructure'),
+      '@tos/config': path.resolve(import.meta.dirname, './packages/config'),
     },
     // @blinkdotnew/ui + framer-motion + R3F peers must share one React instance or hooks
     // crash inside motion with: Cannot read properties of null (reading 'useRef')

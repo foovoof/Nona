@@ -1,10 +1,13 @@
 // Cron: send proactive peak alerts to available drivers (every 30 minutes).
 import { createFileRoute } from "@tanstack/react-router";
+import { guardCronRequest } from "@/lib/security/guards.server";
 
 export const Route = createFileRoute("/api/public/cron/peak-alerts")({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
+        const guard = await guardCronRequest(request);
+        if (!guard.ok) return guard.response;
         const { runPeakAlerts } = await import("@/lib/peak.server");
         try {
           const result = await runPeakAlerts();

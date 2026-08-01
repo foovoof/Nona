@@ -4,6 +4,9 @@ import { sendMessage, replyKeyboard, removeKeyboard, inlineKeyboard, answerCallb
 import { getState, setState, patchContext, resetState } from "@/lib/bot/state.server";
 import { dispatchRide } from "@/lib/bot/dispatcher.server";
 import { triggerEmergency } from "@/lib/bot/emergency.server";
+import { cancelRide } from "@/lib/rides/transition.server";
+import { checkRateLimit } from "@/lib/security/rate-limit.server";
+import { recordAudit } from "@/lib/security/audit.server";
 
 const ROLE = "rider" as const;
 
@@ -48,9 +51,14 @@ export async function handleRiderUpdate(update: any) {
       await sendMessage(ROLE, chatId, "🆘 تم إرسال تنبيه الطوارئ لفريق الدعم. سيتم التواصل معك فوراً.");
     } else if (data.startsWith("cancel:")) {
       const rideId = data.slice("cancel:".length);
-      const { data: r } = await supabaseAdmin.from("rides").update({ status: "cancelled", cancelled_at: new Date().toISOString(), cancelled_by: "rider" }).eq("id", rideId).select("driver_id").maybeSingle();
-      if (r?.driver_id) await supabaseAdmin.from("drivers").update({ status: "available" }).eq("id", r.driver_id);
-      await sendMessage(ROLE, chatId, "❌ تم إلغاء الرحلة.", { reply_markup: MAIN_KB });
+      const outcome = await cancelRide({ rideId, actorRole: "rider", actorId: telegramId, reason: "إلغاء من الراكب" });
+      if (outcome.ok) {
+        await sendMessage(ROLE, chatId, "❌ تم إلغاء الرحلة، وتم إشعار السائق.", { reply_markup: MAIN_KB });
+      } else if (outcome.status === "invalid_transition") {
+        await sendMessage(ROLE, chatId, "⚠️ لا يمكن إلغاء الرحلة في حالتها الحالية.", { reply_markup: MAIN_KB });
+      } else {
+        await sendMessage(ROLE, chatId, "تعذّر إلغاء الرحلة. حاول مرة أخرى.", { reply_markup: MAIN_KB });
+      }
     } else if (data === "confirm_ride") {
       await createRideFromContext(chatId, telegramId);
     } else if (data === "cancel_request") {
@@ -105,6 +113,12 @@ export async function handleRiderUpdate(update: any) {
   }
 
   if (state === "support_msg" && text) {
+    const supportLimit = await checkRateLimit("supportPerUser", `rider:${telegramId}`);
+    if (!supportLimit.allowed) {
+      await sendMessage(ROLE, chatId, "⚠️ أرسلت رسائل كثيرة للدعم. حاول بعد قليل.", { reply_markup: MAIN_KB });
+      await resetState(telegramId, ROLE);
+      return;
+    }
     await supabaseAdmin.from("support_tickets").insert({ user_role: "rider", user_telegram_id: telegramId, message: text });
     await resetState(telegramId, ROLE);
     await sendMessage(ROLE, chatId, "✅ تم إرسال رسالتك للدعم.", { reply_markup: MAIN_KB });
@@ -159,6 +173,12 @@ async function createRideFromContext(chatId: number, telegramId: number) {
   const ctx = context as Record<string, any>;
   const { data: rider } = await supabaseAdmin.from("riders").select("id").eq("telegram_id", telegramId).single();
   if (!rider) return;
+  const rideLimit = await checkRateLimit("rideRequestPerRider", rider.id);
+  if (!rideLimit.allowed) {
+    await resetState(telegramId, ROLE);
+    await sendMessage(ROLE, chatId, "⚠️ تجاوزت الحد المسموح من الطلبات هذه الساعة.", { reply_markup: MAIN_KB });
+    return;
+  }
   const { data: ride } = await supabaseAdmin.from("rides").insert({
     rider_id: rider.id,
     pickup_lat: ctx.pickup_lat, pickup_lng: ctx.pickup_lng, pickup_name: ctx.pickup_name,
@@ -170,6 +190,7 @@ async function createRideFromContext(chatId: number, telegramId: number) {
     await sendMessage(ROLE, chatId, "حدث خطأ. حاول مرة أخرى.", { reply_markup: MAIN_KB });
     return;
   }
+  await recordAudit({ actorType: "rider", actorId: telegramId, action: "ride.requested", entityType: "ride", entityId: ride.id });
   await sendMessage(ROLE, chatId, "🔎 جاري البحث عن سائق قريب...", { reply_markup: MAIN_KB });
   await dispatchRide(ride.id);
 }

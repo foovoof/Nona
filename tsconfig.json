@@ -5,6 +5,7 @@
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
+    "types": ["node", "vite/client"],
     "moduleResolution": "bundler",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -29,9 +30,14 @@
     "allowUnreachableCode": true,
     "allowUnusedLabels": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@tos/shared/*": ["./packages/shared/*"],
+      "@tos/domain/*": ["./packages/domain/*"],
+      "@tos/application/*": ["./packages/application/*"],
+      "@tos/infrastructure/*": ["./packages/infrastructure/*"],
+      "@tos/config": ["./packages/config"]
     }
   },
-  "include": ["src"],
+  "include": ["src", "packages"],
   "references": [{ "path": "./tsconfig.node.json" }]
 } 

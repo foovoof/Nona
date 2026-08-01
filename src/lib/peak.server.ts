@@ -2,6 +2,7 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { sendMessage } from "@/lib/telegram/api.server";
 import { getCalendarContext } from "./saudi-calendar.server";
+import { riyadhBucketAhead, formatRiyadhTime } from "@/lib/time/riyadh";
 
 const MIN_HOURS_BETWEEN_ALERTS = 2;
 
@@ -15,8 +16,9 @@ export async function runPeakAlerts() {
   if (!cities) return { alerted: 0 };
 
   const cal = getCalendarContext();
-  const nextHour = (new Date().getUTCHours() + 3 + 1) % 24; // Riyadh hour +1
-  const nextDow = new Date().getUTCDay(); // approx
+  // Bucketing uses Riyadh local time (storage stays UTC); look 60 minutes ahead
+  // so a late-evening alert correctly rolls over to the next Riyadh weekday.
+  const { dayOfWeek: nextDow, hour: nextHour } = riyadhBucketAhead(60);
 
   let totalAlerted = 0;
 
@@ -66,7 +68,7 @@ export async function runPeakAlerts() {
     const msg = [
       "🚨 <b>تنبيه ذروة استباقي</b>",
       `🏙 ${city.name_ar}`,
-      `⏰ خلال 30-60 دقيقة`,
+      `⏰ خلال 30-60 دقيقة (${formatRiyadhTime(new Date(Date.now() + 45 * 60000))} بتوقيت الرياض)`,
       `📊 ${reason}`,
       "",
       "كن متاحاً الآن لتحقيق دخل أعلى.",

@@ -66,6 +66,18 @@ export async function aiEvaluateRide(rideId: string): Promise<void> {
 
   if (!ride || ride.status !== "completed") return;
 
+  // Idempotency: only the first claimant evaluates this ride. A stale claim
+  // (crashed worker) is recycled by the RPC after 15 minutes.
+  const { data: claimed, error: claimError } = await supabaseAdmin.rpc("claim_ride_evaluation", { _ride_id: rideId });
+  if (claimError) {
+    console.error("[ai-evaluate] claim failed", claimError);
+    return;
+  }
+  if (claimed !== true) {
+    console.info("[ai-evaluate] ride already evaluated or in-flight", rideId);
+    return;
+  }
+
   const { data: messages } = await supabaseAdmin
     .from("messages")
     .select("sender_role, message_type, content")
@@ -107,6 +119,7 @@ export async function aiEvaluateRide(rideId: string): Promise<void> {
     result = experimental_output;
   } catch (e) {
     console.error("[ai-evaluate] gateway call failed", e);
+    await supabaseAdmin.rpc("release_ride_evaluation", { _ride_id: rideId });
     return;
   }
 
@@ -120,22 +133,29 @@ export async function aiEvaluateRide(rideId: string): Promise<void> {
     { onConflict: "ride_id" },
   );
 
-  // Fold into rolling averages
+  // Fold into rolling averages exactly once, under optimistic locking.
+  const { data: applied, error: applyError } = await supabaseAdmin.rpc("apply_ride_evaluation", {
+    _ride_id: rideId,
+    _driver_rating: result.driver_rating,
+    _rider_rating: result.rider_rating,
+    _flags: result.flags,
+  });
+  const applyRow: any = Array.isArray(applied) ? applied[0] : applied;
+  if (applyError || !applyRow?.ok) {
+    console.error("[ai-evaluate] apply failed", applyError ?? applyRow?.status, rideId);
+    if (applyRow?.status !== "already_applied") return;
+  }
+  if (applyRow?.status === "already_applied") {
+    console.info("[ai-evaluate] totals already applied for ride", rideId);
+    return;
+  }
   if (driver) {
-    const prevAvg = Number(driver.rating_avg ?? 0);
-    const prevTotal = Number(driver.total_rides ?? 0);
-    const newTotal = prevTotal + 1;
-    const newAvg = ((prevAvg * prevTotal) + result.driver_rating) / newTotal;
-    await supabaseAdmin.from("drivers").update({ rating_avg: Math.round(newAvg * 100) / 100, total_rides: newTotal }).eq("id", driver.id);
-    driver.rating_avg = newAvg; driver.total_rides = newTotal;
+    driver.rating_avg = Number(applyRow?.driver_avg ?? driver.rating_avg);
+    driver.total_rides = Number(applyRow?.driver_total ?? driver.total_rides);
   }
   if (rider) {
-    const prevAvg = Number(rider.rating_avg ?? 0);
-    const prevTotal = Number(rider.total_rides ?? 0);
-    const newTotal = prevTotal + 1;
-    const newAvg = ((prevAvg * prevTotal) + result.rider_rating) / newTotal;
-    await supabaseAdmin.from("riders").update({ rating_avg: Math.round(newAvg * 100) / 100, total_rides: newTotal }).eq("id", rider.id);
-    rider.rating_avg = newAvg; rider.total_rides = newTotal;
+    rider.rating_avg = Number(applyRow?.rider_avg ?? rider.rating_avg);
+    rider.total_rides = Number(applyRow?.rider_total ?? rider.total_rides);
   }
 
   // Apply flagging using configurable thresholds
