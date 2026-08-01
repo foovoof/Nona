@@ -14,6 +14,252 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_type: string
+          entity_id: string | null
+          entity_type: string
+          id: number
+          metadata: Json
+          occurred_at: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_type: string
+          entity_id?: string | null
+          entity_type: string
+          id?: number
+          metadata?: Json
+          occurred_at?: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_type?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: number
+          metadata?: Json
+          occurred_at?: string
+        }
+        Relationships: []
+      }
+      kyc_applications: {
+        Row: {
+          created_at: string
+          driver_id: string
+          face_match_score: number | null
+          id: string
+          reject_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["kyc_status"]
+          submitted_at: string | null
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          driver_id: string
+          face_match_score?: number | null
+          id?: string
+          reject_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["kyc_status"]
+          submitted_at?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          driver_id?: string
+          face_match_score?: number | null
+          id?: string
+          reject_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["kyc_status"]
+          submitted_at?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kyc_applications_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: true
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kyc_documents: {
+        Row: {
+          application_id: string
+          checksum: string | null
+          doc_type: string
+          id: string
+          storage_path: string
+          uploaded_at: string
+        }
+        Insert: {
+          application_id: string
+          checksum?: string | null
+          doc_type: string
+          id?: string
+          storage_path: string
+          uploaded_at?: string
+        }
+        Update: {
+          application_id?: string
+          checksum?: string | null
+          doc_type?: string
+          id?: string
+          storage_path?: string
+          uploaded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kyc_documents_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "kyc_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      otp_challenges: {
+        Row: {
+          attempts: number
+          channel: string
+          code_hash: string
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          last_sent_at: string
+          max_attempts: number
+          phone_blind_index: string
+          phone_ciphertext: string
+          resend_count: number
+          role: string
+          telegram_id: number
+        }
+        Insert: {
+          attempts?: number
+          channel?: string
+          code_hash: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          last_sent_at?: string
+          max_attempts?: number
+          phone_blind_index: string
+          phone_ciphertext: string
+          resend_count?: number
+          role: string
+          telegram_id: number
+        }
+        Update: {
+          attempts?: number
+          channel?: string
+          code_hash?: string
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          last_sent_at?: string
+          max_attempts?: number
+          phone_blind_index?: string
+          phone_ciphertext?: string
+          resend_count?: number
+          role?: string
+          telegram_id?: number
+        }
+        Relationships: []
+      }
+      rate_limit_counters: {
+        Row: {
+          bucket: string
+          count: number
+          subject: string
+          updated_at: string
+          window_start: string
+        }
+        Insert: {
+          bucket: string
+          count?: number
+          subject: string
+          updated_at?: string
+          window_start: string
+        }
+        Update: {
+          bucket?: string
+          count?: number
+          subject?: string
+          updated_at?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
+      ride_evaluations: {
+        Row: {
+          applied_at: string | null
+          claimed_at: string
+          driver_rating: number | null
+          flags: Json
+          ride_id: string
+          rider_rating: number | null
+        }
+        Insert: {
+          applied_at?: string | null
+          claimed_at?: string
+          driver_rating?: number | null
+          flags?: Json
+          ride_id: string
+          rider_rating?: number | null
+        }
+        Update: {
+          applied_at?: string | null
+          claimed_at?: string
+          driver_rating?: number | null
+          flags?: Json
+          ride_id?: string
+          rider_rating?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ride_evaluations_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: true
+            referencedRelation: "rides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      telegram_processed_updates: {
+        Row: {
+          bot_role: string
+          processed_at: string
+          update_id: number
+        }
+        Insert: {
+          bot_role: string
+          processed_at?: string
+          update_id: number
+        }
+        Update: {
+          bot_role?: string
+          processed_at?: string
+          update_id?: number
+        }
+        Relationships: []
+      }
       app_config: {
         Row: {
           key: string
@@ -144,6 +390,7 @@ export type Database = {
       }
       drivers: {
         Row: {
+          version: number
           car_color: string | null
           car_model: string | null
           car_plate: string | null
@@ -181,6 +428,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          version?: number
           car_color?: string | null
           car_model?: string | null
           car_plate?: string | null
@@ -218,6 +466,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          version?: number
           car_color?: string | null
           car_model?: string | null
           car_plate?: string | null
@@ -618,6 +867,7 @@ export type Database = {
       }
       riders: {
         Row: {
+          version: number
           created_at: string
           flagged: boolean
           gender: Database["public"]["Enums"]["gender"] | null
@@ -636,6 +886,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          version?: number
           created_at?: string
           flagged?: boolean
           gender?: Database["public"]["Enums"]["gender"] | null
@@ -654,6 +905,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          version?: number
           created_at?: string
           flagged?: boolean
           gender?: Database["public"]["Enums"]["gender"] | null
@@ -675,6 +927,8 @@ export type Database = {
       }
       rides: {
         Row: {
+          cancel_reason: string | null
+          version: number
           accepted_at: string | null
           cancelled_at: string | null
           cancelled_by: string | null
@@ -712,6 +966,8 @@ export type Database = {
           weather_condition: string | null
         }
         Insert: {
+          cancel_reason?: string | null
+          version?: number
           accepted_at?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
@@ -749,6 +1005,8 @@ export type Database = {
           weather_condition?: string | null
         }
         Update: {
+          cancel_reason?: string | null
+          version?: number
           accepted_at?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
@@ -997,6 +1255,66 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_ride_evaluation: {
+        Args: {
+          _driver_rating: number
+          _flags?: Json
+          _ride_id: string
+          _rider_rating: number
+        }
+        Returns: {
+          driver_avg: number
+          driver_total: number
+          ok: boolean
+          rider_avg: number
+          rider_total: number
+          status: string
+        }[]
+      }
+      claim_ride_evaluation: { Args: { _ride_id: string }; Returns: boolean }
+      claim_telegram_update: {
+        Args: { _bot_role: string; _update_id: number }
+        Returns: boolean
+      }
+      consume_otp_challenge: {
+        Args: { _challenge_id: string; _code_hash: string }
+        Returns: { attempts_left: number; status: string }[]
+      }
+      consume_rate_limit: {
+        Args: {
+          _bucket: string
+          _limit: number
+          _subject: string
+          _window_seconds: number
+        }
+        Returns: { allowed: boolean; remaining: number; reset_at: string }[]
+      }
+      is_valid_ride_transition: {
+        Args: {
+          _from: Database["public"]["Enums"]["ride_status"]
+          _to: Database["public"]["Enums"]["ride_status"]
+        }
+        Returns: boolean
+      }
+      release_ride_evaluation: { Args: { _ride_id: string }; Returns: undefined }
+      transition_ride: {
+        Args: {
+          _actor_id?: string | null
+          _actor_role?: string | null
+          _expected_version?: number | null
+          _reason?: string | null
+          _ride_id: string
+          _to_status: Database["public"]["Enums"]["ride_status"]
+        }
+        Returns: {
+          driver_id: string
+          ok: boolean
+          ride_status: Database["public"]["Enums"]["ride_status"]
+          rider_id: string
+          status: string
+          version: number
+        }[]
+      }
       aggregate_peak_zones: { Args: never; Returns: undefined }
       city_for_point: { Args: { _lat: number; _lng: number }; Returns: string }
       claim_admin_if_first: { Args: never; Returns: boolean }

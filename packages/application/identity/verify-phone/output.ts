@@ -1,9 +1,14 @@
-import type { Result } from '@tos/shared/result';
+import type { Result } from "@tos/shared/result";
 
-// Output DTO for VerifyPhone
 export interface VerifyPhoneOutput {
-  // TODO: define output fields
-  [key: string]: unknown;
+  phone: string;
+  verifiedAt: string;
 }
 
-export type VerifyPhoneResult = Result<VerifyPhoneOutput, Error>;
+export interface VerifyPhoneFailure {
+  code: "NO_CHALLENGE" | "INVALID_CODE" | "EXPIRED" | "TOO_MANY_ATTEMPTS" | "RATE_LIMITED";
+  message: string;
+  attemptsLeft?: number;
+}
+
+export type VerifyPhoneResult = Result<VerifyPhoneOutput, VerifyPhoneFailure>;

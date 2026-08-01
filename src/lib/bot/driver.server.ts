@@ -1,6 +1,7 @@
 // Driver bot — registration FSM + driver dashboard.
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { sendMessage, replyKeyboard, removeKeyboard, inlineKeyboard, answerCallbackQuery } from "@/lib/telegram/api.server";
+import { cancelRide, transitionRide } from "@/lib/rides/transition.server";
 import { getState, setState, patchContext, resetState } from "@/lib/bot/state.server";
 import { acceptOffer, rejectOffer } from "@/lib/bot/dispatcher.server";
 
@@ -61,12 +62,23 @@ export async function handleDriverUpdate(update: any) {
       await sendMessage(ROLE, chatId, "❌ تم رفض الطلب.");
     } else if (data.startsWith("complete:")) {
       const rideId = data.slice("complete:".length);
-      await supabaseAdmin.from("rides").update({ status: "completed", completed_at: new Date().toISOString() }).eq("id", rideId);
-      await supabaseAdmin.from("drivers").update({ status: "available" }).eq("telegram_id", telegramId);
+      const done = await transitionRide({ rideId, to: "completed", actorRole: "driver", actorId: telegramId });
+      if (!done.ok) {
+        await sendMessage(ROLE, chatId, "⚠️ تعذّر إنهاء الرحلة في حالتها الحالية.");
+        return;
+      }
       await sendMessage(ROLE, chatId, "✅ تم إنهاء الرحلة. بانتظار طلب جديد.");
       // Fire-and-forget AI evaluation (don't block webhook response)
       const { aiEvaluateRide } = await import("@/lib/bot/ai-evaluate.server");
       aiEvaluateRide(rideId).catch((e) => console.error("[ai-evaluate]", e));
+    } else if (data.startsWith("dcancel:")) {
+      const rideId = data.slice("dcancel:".length);
+      const outcome = await cancelRide({ rideId, actorRole: "driver", actorId: telegramId, reason: "إلغاء من السائق" });
+      await sendMessage(
+        ROLE,
+        chatId,
+        outcome.ok ? "❌ تم إلغاء الرحلة وتم إشعار الراكب." : "⚠️ لا يمكن إلغاء الرحلة في حالتها الحالية.",
+      );
     }
     return;
   }
