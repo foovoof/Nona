@@ -32,6 +32,7 @@ CREATE OR REPLACE FUNCTION public.transition_ride(
 )
 RETURNS TABLE(ok boolean, status text, ride_status public.ride_status, driver_id uuid, rider_id uuid, version integer)
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+#variable_conflict use_column
 DECLARE
   _ride public.rides;
   _now timestamptz := now();
@@ -58,7 +59,7 @@ BEGIN
     RETURN;
   END IF;
 
-  UPDATE public.rides SET
+  UPDATE public.rides rd SET
     status        = _to_status,
     version       = _ride.version + 1,
     accepted_at   = CASE WHEN _to_status = 'accepted'    THEN COALESCE(accepted_at, _now)  ELSE accepted_at END,
@@ -66,29 +67,29 @@ BEGIN
     completed_at  = CASE WHEN _to_status = 'completed'   THEN COALESCE(completed_at, _now) ELSE completed_at END,
     cancelled_at  = CASE WHEN _to_status = 'cancelled'   THEN COALESCE(cancelled_at, _now) ELSE cancelled_at END,
     cancelled_by  = CASE WHEN _to_status = 'cancelled'   THEN COALESCE(cancelled_by, _actor_role) ELSE cancelled_by END,
-    cancel_reason = CASE WHEN _to_status = 'cancelled'   THEN COALESCE(_reason, cancel_reason) ELSE cancel_reason END
-  WHERE id = _ride_id
-  RETURNING * INTO _ride;
+    cancel_reason = CASE WHEN _to_status = 'cancelled'   THEN COALESCE(_reason, rd.cancel_reason) ELSE rd.cancel_reason END
+  WHERE rd.id = _ride_id
+  RETURNING rd.* INTO _ride;
 
   -- Side effects that must be part of the same transaction
   IF _to_status IN ('cancelled','failed','completed') THEN
-    UPDATE public.ride_offers
-       SET status = 'cancelled', responded_at = COALESCE(responded_at, _now)
-     WHERE ride_id = _ride_id AND status = 'pending';
+    UPDATE public.ride_offers o
+       SET status = 'cancelled', responded_at = COALESCE(o.responded_at, _now)
+     WHERE o.ride_id = _ride_id AND o.status = 'pending';
 
     IF _ride.driver_id IS NOT NULL THEN
-      UPDATE public.drivers SET status = 'available', version = version + 1
-       WHERE id = _ride.driver_id AND status <> 'offline';
+      UPDATE public.drivers d SET status = 'available', version = d.version + 1
+       WHERE d.id = _ride.driver_id AND d.status <> 'offline';
     END IF;
   END IF;
 
   IF _to_status = 'cancelled' THEN
     IF _actor_role = 'driver' AND _ride.driver_id IS NOT NULL THEN
-      UPDATE public.drivers SET total_cancellations = total_cancellations + 1, version = version + 1
-       WHERE id = _ride.driver_id;
+      UPDATE public.drivers d SET total_cancellations = d.total_cancellations + 1, version = d.version + 1
+       WHERE d.id = _ride.driver_id;
     ELSIF _actor_role = 'rider' THEN
-      UPDATE public.riders SET total_cancellations = total_cancellations + 1, version = version + 1
-       WHERE id = _ride.rider_id;
+      UPDATE public.riders r SET total_cancellations = r.total_cancellations + 1, version = r.version + 1
+       WHERE r.id = _ride.rider_id;
     END IF;
   END IF;
 

@@ -29,9 +29,24 @@ export function blindIndex(secret: string, value: string): string {
   return createHmac("sha256", `${secret}:blind-index`).update(normalizePhone(value)).digest("hex");
 }
 
+// Telegram keyboards in ar/fa locales emit Arabic-Indic (٠-٩) and Eastern
+// Arabic-Indic (۰-۹) digits; fold them to ASCII before any parsing.
+const ARABIC_INDIC_ZERO = 0x0660;
+const EASTERN_ARABIC_INDIC_ZERO = 0x06f0;
+
+export function toAsciiDigits(input: string): string {
+  return (input ?? "").replace(/[\u0660-\u0669\u06f0-\u06f9]/g, (ch) => {
+    const code = ch.charCodeAt(0);
+    const base = code >= EASTERN_ARABIC_INDIC_ZERO ? EASTERN_ARABIC_INDIC_ZERO : ARABIC_INDIC_ZERO;
+    return String(code - base);
+  });
+}
+
 /** Saudi-first E.164 normalisation: 05xxxxxxxx -> +9665xxxxxxxx */
 export function normalizePhone(raw: string): string {
-  const digits = (raw ?? "").replace(/[^\d+]/g, "");
+  const ascii = toAsciiDigits(raw ?? "");
+  // Keep a leading "+" only; a "+" anywhere else is noise from pasted numbers.
+  const digits = (ascii.trimStart().startsWith("+") ? "+" : "") + ascii.replace(/\D/g, "");
   if (digits.startsWith("+")) return digits;
   if (digits.startsWith("00")) return `+${digits.slice(2)}`;
   if (digits.startsWith("05")) return `+966${digits.slice(1)}`;
